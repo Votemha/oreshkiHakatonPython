@@ -1,0 +1,33 @@
+{% extends './base.html' %}
+
+{% block title %}Новый пользователь{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-body">
+        <h3 class="card-title mb-3">Создание пользователя</h3>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Имя</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <button class="btn btn-success">Сохранить</button>
+            <a href="/" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

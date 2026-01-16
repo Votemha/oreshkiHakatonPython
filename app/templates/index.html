@@ -1,0 +1,41 @@
+{% extends './base.html' %}
+
+{% block title %}Пользователи{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Пользователи</h2>
+    <a href="/users/create/" class="btn btn-primary">+ Добавить пользователя</a>
+</div>
+
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Кол-во заметок</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.note_count }}</td>
+            <td>
+                <a href="/notes/{{ user.id }}/" class="btn btn-sm btn-info">Заметки</a>
+                <a href="/users/delete/{{ user.id }}/" class="btn btn-sm btn-danger"
+                   onclick="return confirm('Удалить пользователя?')">
+                   Удалить
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">Пользователей нет</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
