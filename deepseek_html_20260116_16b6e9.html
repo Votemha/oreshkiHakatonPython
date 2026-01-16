@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ note.title }} - ITMO Notes{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Заголовок с действиями -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h1>{{ note.title }}</h1>
+                <div class="text-muted">
+                    <small>
+                        Автор: <strong>{{ note.author.username }}</strong> | 
+                        Создано: {{ note.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        {% if note.updated_at != note.created_at %}
+                        | Обновлено: {{ note.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Кнопки действий (только для автора) -->
+            {% if current_user.id == note.user_id %}
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown">
+                    Действия
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('edit_note', note_id=note.id) }}">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ url_for('delete_note', note_id=note.id) }}" 
+                           onclick="return confirmDelete()">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Теги и категории -->
+        <div class="mb-4">
+            {% if note.category %}
+            <span class="badge bg-primary me-2">{{ note.category }}</span>
+            {% endif %}
+            
+            {% if note.is_public %}
+            <span class="badge bg-success me-2">Публичная</span>
+            {% else %}
+            <span class="badge bg-secondary me-2">Приватная</span>
+            {% endif %}
+            
+            {% if note.tags %}
+            {% for tag in note.tags.split(',') %}
+            <span class="tag">{{ tag.strip() }}</span>
+            {% endfor %}
+            {% endif %}
+        </div>
+        
+        <!-- Содержимое заметки -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="note-content">
+                    {{ note.content|safe|nl2br }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вложения -->
+        {% if attachments %}
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-paperclip"></i> Прикрепленные файлы</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for attachment in attachments %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark me-2"></i>
+                            <a href="{{ url_for('download_attachment', attachment_id=attachment.id) }}" 
+                               class="text-decoration-none">
+                                {{ attachment.filename }}
+                            </a>
+                            <small class="text-muted d-block">
+                                {{ attachment.file_size }} KB
+                            </small>
+                        </div>
+                        <small class="text-muted">
+                            {{ attachment.uploaded_at.strftime('%d.%m.%Y') }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Кнопка возврата -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Назад к списку
+            </a>
+            
+            {% if current_user.id != note.user_id %}
+            <a href="{{ url_for('user_notes', user_id=note.user_id) }}" class="btn btn-outline-primary">
+                Все заметки {{ note.author.username }}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Автоматическое определение ссылок в тексте
+    document.addEventListener('DOMContentLoaded', function() {
+        const noteContent = document.querySelector('.note-content');
+        if (noteContent) {
+            // Простая замена URL на ссылки
+            const text = noteContent.innerHTML;
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            noteContent.innerHTML = text.replace(urlRegex, function(url) {
+                return '<a href="' + url + '" target="_blank">' + url + '</a>';
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
