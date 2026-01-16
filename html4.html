@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}Мои заметки - ITMO Notes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-journal-text"></i> Мои заметки</h1>
+    <a href="{{ url_for('create_note') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Новая заметка
+    </a>
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="GET" action="{{ url_for('index') }}" class="row g-2">
+            <div class="col-md-5">
+                <input type="text" class="form-control" name="search" placeholder="Поиск по заметкам..." 
+                       value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="category">
+                    <option value="">Все категории</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}" {% if request.args.get('category') == category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-secondary w-100">Фильтровать</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+        <span class="text-muted">Всего заметок: {{ notes|length }}</span>
+    </div>
+</div>
+
+<!-- Список заметок -->
+{% if notes %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for note in notes %}
+    <div class="col">
+        <div class="card note-card h-100">
+            <div class="card-body">
+                <!-- Заголовок с действиями -->
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title mb-0">{{ note.title }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-0" type="button" 
+                                data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('view_note', note_id=note.id) }}">
+                                    <i class="bi bi-eye"></i> Просмотреть
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('edit_note', note_id=note.id) }}">
+                                    <i class="bi bi-pencil"></i> Редактировать
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('delete_note', note_id=note.id) }}" 
+                                   onclick="return confirmDelete()">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Содержимое (превью) -->
+                <p class="card-text text-muted">
+                    {{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}
+                </p>
+                
+                <!-- Теги -->
+                {% if note.tags %}
+                <div class="mb-3">
+                    {% for tag in note.tags.split(',') %}
+                    <span class="tag">{{ tag.strip() }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Мета информация -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar"></i> {{ note.created_at.strftime('%d.%m.%Y') }}
+                    </small>
+                    
+                    {% if note.is_public %}
+                    <span class="badge bg-success">Публичная</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Приватная</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Индикатор файлов -->
+                {% if note.has_attachment %}
+                <div class="mt-2">
+                    <small><i class="bi bi-paperclip"></i> Есть вложение</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('view_note', note_id=note.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                    Открыть заметку
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация (если нужно) -->
+{% if total_pages > 1 %}
+<nav aria-label="Навигация по страницам" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% for page in range(1, total_pages + 1) %}
+        <li class="page-item {% if page == current_page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('index', page=page, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                {{ page }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Сообщение если заметок нет -->
+<div class="text-center py-5">
+    <div class="mb-3">
+        <i class="bi bi-journal-x" style="font-size: 4rem; color: #6c757d;"></i>
+    </div>
+    <h3>Заметок пока нет</h3>
+    <p class="text-muted mb-4">Создайте свою первую заметку!</p>
+    <a href="{{ url_for('create_note') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-circle"></i> Создать первую заметку
+    </a>
+</div>
+{% endif %}
+{% endblock %}
